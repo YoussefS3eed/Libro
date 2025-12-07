@@ -1,4 +1,5 @@
 ﻿global using AutoMapper;
+global using Libro.BLL.Common.Abstraction;
 global using Libro.BLL.Mapper;
 global using Libro.BLL.ModelVM.Category;
 global using Libro.BLL.ModelVM.ResponseResult;
@@ -12,4 +13,3 @@ global using Microsoft.EntityFrameworkCore;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Logging;
 global using System.ComponentModel.DataAnnotations;
-global using Libro.BLL.Common.Abstraction;

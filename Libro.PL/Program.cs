@@ -9,7 +9,7 @@ namespace Libro.PL
             var builder = WebApplication.CreateBuilder(args);
 
             // ------------------- Logging -------------------
-            builder.Logging.ClearProviders();              
+            builder.Logging.ClearProviders();
             builder.Logging.AddConsole();
             builder.Logging.AddDebug();
 

@@ -1,7 +1,5 @@
 using System.Diagnostics;
 
-using Microsoft.AspNetCore.Mvc;
-
 namespace Libro.PL.Controllers
 {
     public class HomeController : Controller

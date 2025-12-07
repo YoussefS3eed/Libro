@@ -6,8 +6,8 @@ namespace Libro.BLL.Service.Abstraction
     {
         Task<Response<AuthorViewModel>> CreateAuthorAsync(AuthorFormVM model);
         Task<Response<AuthorViewModel>> UpdateAuthorAsync(AuthorFormVM model);
-        Task<Response<AuthorViewModel>> ToggleStatusAuthorAsync(int AuthorId);
-        Task<Response<AuthorFormVM>> GetAuthorByIdAsync(int AuthorId);
+        Task<Response<AuthorViewModel>> ToggleStatusAuthorAsync(int authorId);
+        Task<Response<AuthorFormVM>> GetAuthorByIdAsync(int authorId);
         Task<Response<IEnumerable<AuthorViewModel>>> GetAllAuthorsAsync();
         Task<Response<IEnumerable<AuthorViewModel>>> GetAllNotActiveAuthorsAsync();
     }

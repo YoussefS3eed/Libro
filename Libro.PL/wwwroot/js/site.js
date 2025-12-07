@@ -159,10 +159,10 @@ var KTDatatables = function () {
 $(document).ready(function () {
 
     // SweetAlert::Show success 
-    //var message = $('#Message').text().trim();
-    //if (message !== '') {
-    //    showSuccessMessage(message);
-    //}
+    var message = $('#Message').text().trim();
+    if (message !== '') {
+        showSuccessMessage(message);
+    }
 
     //DataTables
     KTUtil.onDOMContentLoaded(function () {

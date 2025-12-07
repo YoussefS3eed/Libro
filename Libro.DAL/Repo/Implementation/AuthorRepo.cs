@@ -8,13 +8,15 @@
         {
             _context = context;
         }
-        public async Task<Author?> AddAsync(Author newAuthor)
+        private async Task<bool> SaveChangesAsync()
+            => await _context.SaveChangesAsync() > 0;
+        public async Task<Author?> AddAsync(Author author)
         {
             try
             {
-                await _context.Authors.AddAsync(newAuthor);
-                if (await _context.SaveChangesAsync() > 0)
-                    return newAuthor;
+                await _context.Authors.AddAsync(author);
+                if (await SaveChangesAsync())
+                    return author;
                 return null;
             }
             catch
@@ -26,11 +28,15 @@
         {
             try
             {
-                var isUpdated = newAuthor.Update(newAuthor.Name, newAuthor.UpdatedBy! ?? "System Author from Update");
-                if (isUpdated)
+                var updatedAuthor = await GetAuthorByIdAsync(newAuthor.Id);
+                if (updatedAuthor is not null)
                 {
-                    if (await _context.SaveChangesAsync() > 0)
-                        return newAuthor;
+                    var isUpdated = updatedAuthor.Update(newAuthor.Name, newAuthor.UpdatedBy! ?? "System");
+                    if (isUpdated)
+                    {
+                        if (await SaveChangesAsync())
+                            return updatedAuthor;
+                    }
                 }
                 return null;
             }
@@ -43,13 +49,16 @@
         {
             try
             {
-                var Author = await GetAuthorByIdAsync(id);
-                if (Author is null)
+                var author = await GetAuthorByIdAsync(id);
+                if (author is null)
+                {
                     return null;
+                }
 
-                Author.ToggleStatus("System from Author Toggle Status");
-                await _context.SaveChangesAsync();
-                return Author;
+                author.ToggleStatus("System");
+                if (await SaveChangesAsync())
+                    return author;
+                return null;
             }
             catch
             {
@@ -67,7 +76,9 @@
                 IQueryable<Author> query = _context.Authors;
 
                 if (filter is not null)
+                {
                     query = query.Where(filter);
+                }
 
                 return query;
             }
