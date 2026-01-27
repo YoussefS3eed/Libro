@@ -13,6 +13,7 @@
         }
         public int Id { get; private set; }
         public string Name { get; private set; } = null!;
+        public ICollection<BookCategory> Books { get; private set; } = new List<BookCategory>();
         public bool Update(string name, string deletedBy)
         {
             if (!string.IsNullOrEmpty(deletedBy) && Name != name)
