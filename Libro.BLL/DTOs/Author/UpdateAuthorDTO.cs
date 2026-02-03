@@ -1,6 +1,6 @@
-﻿namespace Libro.BLL.DTOs.Category
+﻿namespace Libro.BLL.DTOs.Author
 {
-    public class CategoryUpdateDto
+    public class UpdateAuthorDTO
     {
         public int Id { get; set; }
         [MaxLength(100), Required]

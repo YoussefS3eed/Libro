@@ -14,7 +14,7 @@ namespace Libro.BLL.Service.Implementation
             _mapper = mapper;
             _logger = logger;
         }
-        public async Task<Response<AuthorDto>> CreateAsync(AuthorCreateDto dto)
+        public async Task<Response<AuthorDto>> CreateAsync(CreateAuthorDTO dto)
         {
             try
             {
@@ -38,14 +38,14 @@ namespace Libro.BLL.Service.Implementation
                 return new(null, "Unexpected error.", true, HttpStatusCode.InternalServerError);
             }
         }
-        public async Task<Response<AuthorDto>> UpdateAsync(AuthorUpdateDto dto)
+        public async Task<Response<AuthorDto>> UpdateAsync(UpdateAuthorDTO dto)
         {
             try
             {
                 if (dto == null)
                     return new(null, "Invalid data.", true, HttpStatusCode.BadRequest);
 
-                var existingAuthor = await _authorRepo.GetAuthorByIdAsync(dto.Id);
+                var existingAuthor = await _authorRepo.GetByIdAsync(dto.Id);
                 if (existingAuthor == null)
                     return new(null, "Author not found.", true, HttpStatusCode.NotFound);
 
@@ -71,12 +71,12 @@ namespace Libro.BLL.Service.Implementation
             try
             {
 
-                var author = await _authorRepo.GetAuthorByIdAsync(authorId);
+                var author = await _authorRepo.GetByIdAsync(authorId);
                 if (author == null)
                     return new(null, "Author not found.", true, HttpStatusCode.NotFound);
 
                 var result = await _authorRepo.ToggleStatusAsync(author.Id);
-                if(result == null)
+                if (result == null)
                     return new(null, "Database error.", true, HttpStatusCode.BadRequest);
 
                 return new(_mapper.Map<AuthorDto>(result), null, false);
@@ -91,7 +91,7 @@ namespace Libro.BLL.Service.Implementation
         {
             try
             {
-                var author = await _authorRepo.GetAuthorByIdAsync(authorId);
+                var author = await _authorRepo.GetByIdAsync(authorId);
                 if (author == null)
                     return new(null, "Author not found.", true, HttpStatusCode.NotFound);
 
@@ -107,7 +107,7 @@ namespace Libro.BLL.Service.Implementation
         {
             try
             {
-                var authors = await _authorRepo.GetAllAuthors().AsNoTracking().ToListAsync();
+                var authors = await _authorRepo.GetAllAsync();
                 return new(_mapper.Map<IEnumerable<AuthorDto>>(authors), null, false);
             }
             catch (Exception ex)
@@ -120,7 +120,7 @@ namespace Libro.BLL.Service.Implementation
         {
             try
             {
-                var authors = await _authorRepo.GetAllAuthors(a => a.IsDeleted).AsNoTracking().ToListAsync();
+                var authors = await _authorRepo.GetAllAsync(a => a.IsDeleted);
                 return new(_mapper.Map<IEnumerable<AuthorDto>>(authors), null, false);
             }
             catch (Exception ex)

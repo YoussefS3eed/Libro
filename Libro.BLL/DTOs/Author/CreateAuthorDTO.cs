@@ -1,8 +1,7 @@
 ﻿namespace Libro.BLL.DTOs.Author
 {
-    public class AuthorUpdateDto
+    public class CreateAuthorDTO
     {
-        public int Id { get; set; }
         [MaxLength(100), Required]
         public string Name { get; set; } = null!;
     }

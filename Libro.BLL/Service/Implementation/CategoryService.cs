@@ -14,7 +14,7 @@ namespace Libro.BLL.Service.Implementation
             _mapper = mapper;
             _logger = logger;
         }
-        public async Task<Response<CategoryDto>> CreateAsync(CategoryCreateDto dto)
+        public async Task<Response<CategoryDto>> CreateAsync(CreateCategoryDTO dto)
         {
             try
             {
@@ -38,21 +38,21 @@ namespace Libro.BLL.Service.Implementation
                 return new(null, "Unexpected error.", true, HttpStatusCode.InternalServerError);
             }
         }
-        public async Task<Response<CategoryDto>> UpdateAsync(CategoryUpdateDto dto)
+        public async Task<Response<CategoryDto>> UpdateAsync(UpdateCategoryDTO dto)
         {
             try
             {
                 if (dto == null)
                     return new(null, "Invalid data.", true, HttpStatusCode.BadRequest);
 
-                var existingCategory = await _categoryRepo.GetCategoryByIdAsync(dto.Id);
+                var existingCategory = await _categoryRepo.GetByIdAsync(dto.Id);
                 if (existingCategory == null)
                     return new(null, "Category not found.", true, HttpStatusCode.NotFound);
 
                 // Check if name changed and validate uniqueness
                 if (existingCategory.Name != dto.Name && await NameExistsAsync(dto.Name))
                     return new(null, "Category name already exists.", true, HttpStatusCode.Conflict);
-                
+
                 var category = _mapper.Map<Category>(dto);
                 var result = await _categoryRepo.UpdateAsync(category);
                 if (result == null)
@@ -70,14 +70,14 @@ namespace Libro.BLL.Service.Implementation
         {
             try
             {
-                var category = await _categoryRepo.GetCategoryByIdAsync(categoryId);
+                var category = await _categoryRepo.GetByIdAsync(categoryId);
                 if (category == null)
                     return new(null, "Category not found.", true, HttpStatusCode.NotFound);
 
                 var result = await _categoryRepo.ToggleStatusAsync(category.Id);
                 if (result == null)
                     return new(null, "Database error.", true, HttpStatusCode.BadRequest);
-                
+
                 return new(_mapper.Map<CategoryDto>(result), null, false);
             }
             catch (Exception ex)
@@ -90,7 +90,7 @@ namespace Libro.BLL.Service.Implementation
         {
             try
             {
-                var category = await _categoryRepo.GetCategoryByIdAsync(categoryId);
+                var category = await _categoryRepo.GetByIdAsync(categoryId);
                 if (category == null)
                     return new(null, "Category not found.", true, HttpStatusCode.NotFound);
 
@@ -106,7 +106,7 @@ namespace Libro.BLL.Service.Implementation
         {
             try
             {
-                var categories = await _categoryRepo.GetAllCategories().AsNoTracking().ToListAsync();
+                var categories = await _categoryRepo.GetAllAsync();
                 return new(_mapper.Map<IEnumerable<CategoryDto>>(categories), null, false);
             }
             catch (Exception ex)
@@ -119,7 +119,7 @@ namespace Libro.BLL.Service.Implementation
         {
             try
             {
-                var categories = await _categoryRepo.GetAllCategories(c => c.IsDeleted).AsNoTracking().ToListAsync();
+                var categories = await _categoryRepo.GetAllAsync(c => c.IsDeleted);
                 return new(_mapper.Map<IEnumerable<CategoryDto>>(categories), null, false);
             }
             catch (Exception ex)
@@ -132,7 +132,7 @@ namespace Libro.BLL.Service.Implementation
             await _categoryRepo.AnyAsync(c => c.Name == name);
         public async Task<bool> IsAllowed(int Id, string name)
         {
-            var category =  await _categoryRepo.GetSingleOrDefaultAsync(c => c.Name == name);
+            var category = await _categoryRepo.GetSingleOrDefaultAsync(c => c.Name == name);
             return category is null || category.Id.Equals(Id);
         }
         private string GetCurrentUser()

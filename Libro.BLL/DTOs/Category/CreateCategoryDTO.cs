@@ -1,6 +1,6 @@
-﻿namespace Libro.BLL.DTOs.Author
+﻿namespace Libro.BLL.DTOs.Category
 {
-    public class AuthorCreateDto
+    public class CreateCategoryDTO
     {
         [MaxLength(100), Required]
         public string Name { get; set; } = null!;

@@ -7,8 +7,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Folder Include="Service\Implementation\" />
-		<Folder Include="Service\Abstraction\" />
 		<Folder Include="Common\Helpers\" />
 	</ItemGroup>
 

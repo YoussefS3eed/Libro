@@ -1,4 +1,6 @@
-﻿using Libro.BLL.DTOs.Author;
+﻿using Libro.BLL.DTOs;
+using Libro.BLL.DTOs.Author;
+using Libro.BLL.DTOs.Book;
 using Libro.BLL.DTOs.Category;
 
 namespace Libro.BlL.Mapper
@@ -7,13 +9,43 @@ namespace Libro.BlL.Mapper
     {
         public DomainProfile()
         {
-            CreateMap<CategoryCreateDto, Category>();
-            CreateMap<CategoryUpdateDto, Category>();
+            // Category Mappings
+            CreateMap<CreateCategoryDTO, Category>();
+            CreateMap<UpdateCategoryDTO, Category>();
             CreateMap<Category, CategoryDto>();
+            CreateMap<Category, SelectListItemDTO>()
+                .ForMember(dest => dest.Value, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.Text, opt => opt.MapFrom(src => src.Name));
 
-            CreateMap<AuthorCreateDto, Author>();
-            CreateMap<AuthorUpdateDto, Author>();
+
+            // Author Mappings
+            CreateMap<CreateAuthorDTO, Author>();
+            CreateMap<UpdateAuthorDTO, Author>();
             CreateMap<Author, AuthorDto>();
+            CreateMap<Author, SelectListItemDTO>()
+                .ForMember(dest => dest.Value, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.Text, opt => opt.MapFrom(src => src.Name));
+
+
+
+            // Book Mappings
+            CreateMap<CreateBookDTO, Book>()
+                .ForMember(dest => dest.Categories, opt => opt.Ignore())
+                .AfterMap((dto, book) =>
+                {
+                    foreach (var categoryId in dto.CategoryIds)
+                    {
+                        book.AddCategory(categoryId!.Value);
+                    }
+                });
+
+            CreateMap<UpdateBookDTO, Book>().ReverseMap();
+            CreateMap<Book, BookDTO>()
+                .ForMember(dest => dest.AuthorName, opt => opt.MapFrom(src => src.Author!.Name))
+                .ForMember(dest => dest.CategoryIds, opt => opt.MapFrom(src =>
+                    src.Categories.Select(c => c.CategoryId).ToList()));
+
+
         }
     }
 }

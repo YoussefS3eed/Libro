@@ -32,6 +32,8 @@ namespace Libro.PL
             builder.Services.AddAutoMapper(x => x.AddProfile<DomainProfile>());
             // ------------------- Add MVC -------------------
             builder.Services.AddControllersWithViews();
+
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

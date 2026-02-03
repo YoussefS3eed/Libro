@@ -41,7 +41,7 @@ namespace Libro.PL.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState[nameof(model.Name)]?.Errors.First().ErrorMessage);
 
-            var dto = _mapper.Map<CategoryCreateDto>(model);
+            var dto = _mapper.Map<CreateCategoryDTO>(model);
             var result = await _categoryService.CreateAsync(dto);
 
             if (result.HasErrorMessage)
@@ -70,7 +70,7 @@ namespace Libro.PL.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState[nameof(model.Name)]?.Errors.First().ErrorMessage);
 
-            var dto = _mapper.Map<CategoryUpdateDto>(model);
+            var dto = _mapper.Map<UpdateCategoryDTO>(model);
             var result = await _categoryService.UpdateAsync(dto);
 
             if (result.HasErrorMessage)

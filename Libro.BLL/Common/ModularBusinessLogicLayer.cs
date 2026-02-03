@@ -13,6 +13,8 @@ namespace Libro.BLL.Common
             services.AddScoped<IUniqueNameValidator, AuthorService>();
             services.AddScoped<IAuthorService, AuthorService>();
 
+            services.AddScoped<IBookService, BookService>();
+
             services.AddAutoMapper(x => x.AddProfile<DomainProfile>());
             return services;
         }

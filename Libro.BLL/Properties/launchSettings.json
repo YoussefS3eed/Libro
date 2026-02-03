@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "Libro.BLL": {
+      "commandName": "Project"
+    },
+    "Profile 1": {
+      "commandName": "Project"
+    },
+    "Profile 2": {
+      "commandName": "Executable",
+      "executablePath": "D:\\Courses\\03. CSharp .Net Track\\12. Projects\\01. MVC Projects\\Libro\\Libro.slnx"
+    }
+  }
+}

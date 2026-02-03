@@ -38,7 +38,7 @@ namespace Libro.PL.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState[nameof(model.Name)]?.Errors.First().ErrorMessage);
 
-            var dto = _mapper.Map<AuthorCreateDto>(model);
+            var dto = _mapper.Map<CreateAuthorDTO>(model);
             var result = await _authorService.CreateAsync(dto);
 
             if (result.HasErrorMessage)
@@ -67,7 +67,7 @@ namespace Libro.PL.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState[nameof(model.Name)]?.Errors.First().ErrorMessage);
 
-            var dto = _mapper.Map<AuthorUpdateDto>(model);
+            var dto = _mapper.Map<UpdateAuthorDTO>(model);
             var result = await _authorService.UpdateAsync(dto);
 
             if (result.HasErrorMessage)
