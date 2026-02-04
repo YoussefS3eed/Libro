@@ -157,6 +157,27 @@ var KTDatatables = function () {
 
 // ======== Document Ready ========
 $(document).ready(function () {
+    //TinyMCE
+    var options = { selector: ".js-tinymce", height: "422" };
+
+    if (KTThemeMode.getMode() === "dark") {
+        options["skin"] = "oxide-dark";
+        options["content_css"] = "dark";
+    }
+
+    tinymce.init(options);
+
+    //Select2
+    $('.js-select2').select2();
+
+    //Datepicker
+    $('.js-datepicker').daterangepicker({
+        singleDatePicker: true,
+        autoApply: true,
+        drops: 'up',
+        maxDate: new Date()
+    });
+
 
     // SweetAlert::Show success 
     var message = $('#Message').text().trim();

@@ -7,8 +7,16 @@
             CreatedBy = "Admin from Protected Book Ctor!";
         }
 
-        public Book(string title, int authorId, string publisher, DateTime publishingDate,
-                    string hall, bool isAvailableForRental, string description, string createdBy)
+        public Book(
+            string title,
+            int authorId,
+            string publisher,
+            DateTime publishingDate,
+            string hall,
+            bool isAvailableForRental,
+            string description,
+            string createdBy,
+            IEnumerable<int>? categoryIds = null)
         {
             Title = title;
             AuthorId = authorId;
@@ -17,7 +25,15 @@
             Hall = hall;
             IsAvailableForRental = isAvailableForRental;
             Description = description;
+
             CreatedBy = createdBy;
+            CreatedOn = DateTime.UtcNow;
+
+            if (categoryIds != null)
+            {
+                foreach (var categoryId in categoryIds.Distinct())
+                    AddCategory(categoryId);
+            }
         }
 
         public int Id { get; private set; }
@@ -34,219 +50,92 @@
         private readonly List<BookCategory> _categories = new();
         public IReadOnlyCollection<BookCategory> Categories => _categories.AsReadOnly();
 
-        //public bool Update(string title, int authorId, string publisher, DateTime publishingDate,
-        //                  string hall, bool isAvailableForRental, string description, string? imageUrl, string updatedBy, List<int?> CategoryIds)
-        //{
-        //    Title = title;
-        //    AuthorId = authorId;
-        //    Publisher = publisher;
-        //    PublishingDate = publishingDate;
-        //    Hall = hall;
-        //    IsAvailableForRental = isAvailableForRental;
-        //    Description = description;
-        //    ImageUrl = imageUrl;
-        //    UpdatedOn = DateTime.UtcNow;
-        //    UpdatedBy = updatedBy;
-
-        //    ClearCategories();
-        //    foreach (var categoryId in CategoryIds)
-        //    {
-        //        AddCategory((int)categoryId!);
-        //    }
-        //    return true;
-        //}
         public bool Update(string title, int authorId, string publisher, DateTime publishingDate,
-                   string hall, bool isAvailableForRental, string description,
-                   string? imageUrl, string updatedBy, List<int?> categoryIds)
+                    string hall, bool isAvailableForRental, string description,
+                    string? imageUrl, string updatedBy, IEnumerable<int?> categoryIds)
         {
-            Title = title;
-            AuthorId = authorId;
-            Publisher = publisher;
-            PublishingDate = publishingDate;
-            Hall = hall;
-            IsAvailableForRental = isAvailableForRental;
-            Description = description;
+            var changed = false;
+            if (Title != title ||
+                    AuthorId != authorId ||
+                    Publisher != publisher ||
+                    PublishingDate != publishingDate ||
+                    ImageUrl != imageUrl ||
+                    Hall != hall ||
+                    IsAvailableForRental != isAvailableForRental ||
+                    Description != description)
+            {
+                Title = title;
+                AuthorId = authorId;
+                Publisher = publisher;
+                PublishingDate = publishingDate;
+                Hall = hall;
+                IsAvailableForRental = isAvailableForRental;
+                Description = description;
+                ImageUrl = imageUrl;
+                changed = true;
+            }
+
+            if (UpdateCategories(categoryIds))
+                changed = true;
+
+            if (changed)
+            {
+                UpdatedOn = DateTime.UtcNow;
+                UpdatedBy = updatedBy;
+            }
+            return changed;
+        }
+
+        public void UpdateImage(string imageUrl, string updatedBy)
+        {
+            if (ImageUrl == imageUrl)
+                return;
+
             ImageUrl = imageUrl;
             UpdatedOn = DateTime.UtcNow;
             UpdatedBy = updatedBy;
+        }
 
-            ClearCategories();
-            foreach (var categoryId in categoryIds)
-                AddCategory((int)categoryId!);
+        private bool UpdateCategories(IEnumerable<int?> categoryIds)
+        {
+            var newIds = categoryIds
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+
+            var existingIds = _categories
+                .Select(x => x.CategoryId)
+                .OrderBy(x => x)
+                .ToList();
+
+            if (existingIds.SequenceEqual(newIds))
+                return false;
+
+            _categories.Clear();
+
+            foreach (var categoryId in newIds)
+                AddCategory(categoryId);
 
             return true;
         }
-        public void UpdateImage(string imageUrl, string updatedBy)
-        {
-            ImageUrl = imageUrl;
-            UpdatedOn = DateTime.UtcNow;
-            UpdatedBy = updatedBy;
-        }
 
-        public void ClearCategories()
-        {
-            _categories.Clear();
-        }
-
-        public void AddCategory(int categoryId)
+        public void AddCategory(int? categoryId)
         {
             if (_categories.Any(c => c.CategoryId == categoryId))
                 return;
 
-            _categories.Add(new BookCategory(Id, categoryId));
+            _categories.Add(new BookCategory(categoryId));
         }
 
-        public void ToggleStatus(string deletedBy)
+        public void ToggleStatus(string actionBy)
         {
-            if (!string.IsNullOrEmpty(deletedBy))
-            {
-                IsDeleted = !IsDeleted;
-                DeletedBy = deletedBy;
-                DeletedOn = DateTime.UtcNow;
-                UpdatedOn = DateTime.UtcNow;
-            }
+            IsDeleted = !IsDeleted;
+
+            DeletedBy = IsDeleted ? actionBy : null;
+            DeletedOn = IsDeleted ? DateTime.UtcNow : null;
+
+            UpdatedOn = DateTime.UtcNow;
+            UpdatedBy = actionBy;
         }
     }
 }
-
-
-
-
-//public bool Updated(Book newBook)
-//{
-//    if (Title != newBook.Title ||
-//        AuthorId != newBook.AuthorId ||
-//        Publisher != newBook.Publisher ||
-//        PublishingDate != newBook.PublishingDate ||
-//        ImageUrl != newBook.ImageUrl ||
-//        Hall != newBook.Hall ||
-//        IsAvailableForRental != newBook.IsAvailableForRental ||
-//        Description != newBook.Description ||
-//        Categories != newBook.Categories)
-//    {
-//        Title = newBook.Title;
-//        AuthorId = newBook.AuthorId;
-//        Publisher = newBook.Publisher;
-//        PublishingDate = newBook.PublishingDate;
-//        ImageUrl = newBook.ImageUrl;
-//        Hall = newBook.Hall;
-//        IsAvailableForRental = newBook.IsAvailableForRental;
-//        Description = newBook.Description;
-//        Categories = newBook.Categories;
-//        UpdatedBy = newBook.UpdatedBy ?? "System";
-//        UpdatedOn = DateTime.UtcNow;
-//        return true;
-//    }
-//    return false;
-//}
-//private Book() : base()
-//{
-//}
-//public Book(string title, int authorId, string publisher, DateTime publishingDate,
-//            string hall, bool isAvailableForRental, string description, string createdBy) : base()
-//{
-//    Title = title;
-//    AuthorId = authorId;
-//    Publisher = publisher;
-//    PublishingDate = publishingDate;
-//    Hall = hall;
-//    IsAvailableForRental = isAvailableForRental;
-//    Description = description;
-//    CreatedBy = createdBy;
-//    CreatedOn = DateTime.UtcNow;
-//}
-//public int Id { get; private set; }
-//public string Title { get; private set; } = null!;
-//public int AuthorId { get; private set; }
-//public Author? Author { get; private set; }
-//public string Publisher { get; private set; } = null!;
-//public DateTime PublishingDate { get; private set; }
-//public string? ImageUrl { get; set; }
-//public string Hall { get; private set; } = null!;
-//public bool IsAvailableForRental { get; private set; }
-//public string Description { get; private set; } = null!;
-//public ICollection<BookCategory> Categories { get; private set; } = new List<BookCategory>();
-
-//public bool Update(string title, int authorId, string publisher, DateTime publishingDate,
-//                    string hall, bool isAvailableForRental, string description, string updatedBy)
-//{
-//    var hasChanges = false;
-
-//    if (Title != title)
-//    {
-//        Title = title;
-//        hasChanges = true;
-//    }
-
-//    if (AuthorId != authorId)
-//    {
-//        AuthorId = authorId;
-//        hasChanges = true;
-//    }
-
-//    if (Publisher != publisher)
-//    {
-//        Publisher = publisher;
-//        hasChanges = true;
-//    }
-
-//    if (PublishingDate != publishingDate)
-//    {
-//        PublishingDate = publishingDate;
-//        hasChanges = true;
-//    }
-
-//    if (Hall != hall)
-//    {
-//        Hall = hall;
-//        hasChanges = true;
-//    }
-
-//    if (IsAvailableForRental != isAvailableForRental)
-//    {
-//        IsAvailableForRental = isAvailableForRental;
-//        hasChanges = true;
-//    }
-
-//    if (Description != description)
-//    {
-//        Description = description;
-//        hasChanges = true;
-//    }
-
-//    if (hasChanges)
-//    {
-//        UpdatedOn = DateTime.UtcNow;
-//        UpdatedBy = updatedBy;
-//    }
-
-//    return hasChanges;
-//}
-
-//public void UpdateImageUrl(string imageUrl, string updatedBy)
-//{
-//    ImageUrl = imageUrl;
-//    UpdatedOn = DateTime.UtcNow;
-//    UpdatedBy = updatedBy;
-//}
-//public bool ToggleStatus(string deletedBy)
-//{
-//    if (!string.IsNullOrEmpty(deletedBy))
-//    {
-//        IsDeleted = !IsDeleted;
-//        DeletedBy = deletedBy;
-//        DeletedOn = IsDeleted ? DateTime.UtcNow : null;
-//        UpdatedOn = DateTime.UtcNow;
-//        UpdatedBy = deletedBy;
-//        return true;
-//    }
-//    return false;
-//}
-//public void UpdateCategories(ICollection<int> categoryIds)
-//{
-//    Categories.Clear();
-//    foreach (var categoryId in categoryIds)
-//    {
-//        Categories.Add(new BookCategory { CategoryId = categoryId });
-//    }
-//}

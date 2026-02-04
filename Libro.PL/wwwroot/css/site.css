@@ -16,3 +16,9 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+/* Start Override theme */
+.form-floating > .form-select {
+    padding-bottom: 0.225rem;
+}
+/* End Override theme */

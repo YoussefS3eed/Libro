@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Libro.BLL.DTOs.Book;
+using Libro.PL.ViewModels.Author;
 using Libro.PL.ViewModels.Book;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -61,8 +62,8 @@ namespace Libro.PL.Controllers
                 TempData["Error"] = result.ErrorMessage;
                 return View("Form", await PopulateViewModel(model));
             }
-
-            await SaveImageToDisk(model.Image!, result.Result?.ImageUrl!);
+            if (model.Image != null)
+                await SaveImageToDisk(model.Image, result.Result?.ImageUrl!);
             TempData["Success"] = "Book created successfully";
             return RedirectToAction(nameof(Index));
         }
@@ -90,8 +91,6 @@ namespace Libro.PL.Controllers
 
             var book = await _bookService.GetByIdAsync(model.Id);
 
-            // Handle image upload if new image provided
-            //string? imageUrl = model.ImageUrl;
             if (model.Image != null)
             {
                 var uploadResult = await HandleImageUpload(model.Image);
@@ -112,21 +111,7 @@ namespace Libro.PL.Controllers
             else if (model.Image is null && !string.IsNullOrEmpty(book.Result!.ImageUrl))
                 model.ImageUrl = book.Result!.ImageUrl;
 
-            //// Map to DTO
-            //var updateDto = new UpdateBookDTO
-            //{
-            //    Id = model.Id,
-            //    Title = model.Title,
-            //    AuthorId = model.AuthorId,
-            //    Publisher = model.Publisher,
-            //    PublishingDate = model.PublishingDate,
-            //    Hall = model.Hall,
-            //    IsAvailableForRental = model.IsAvailableForRental,
-            //    Description = model.Description,
-            //    CategoryIds = model.SelectedCategories.ToList(),
-            //    UpdatedBy = User.Identity?.Name ?? "System",
-            //    ImageUrl = imageUrl
-            //};
+
             var updateBookDto = _mapper.Map<UpdateBookDTO>(model);
 
             // Call service
@@ -148,6 +133,12 @@ namespace Libro.PL.Controllers
             TempData["Success"] = "Book updated successfully";
             return RedirectToAction(nameof(Index));
         }
+
+        public async Task<IActionResult> AllowItem(BookFormViewModel model)
+        {
+            return Json(await _bookService.IsAllowed(model.Id, model.Title, model.AuthorId));
+        }
+
         private async Task<BookFormViewModel> PopulateViewModel(BookFormViewModel? model = null)
         {
             BookFormViewModel viewModel = model ?? new BookFormViewModel();

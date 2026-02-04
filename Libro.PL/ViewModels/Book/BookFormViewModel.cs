@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using UoN.ExpressiveAnnotations.NetCore.Attributes;
 
 namespace Libro.PL.ViewModels.Book
 {
@@ -7,9 +8,11 @@ namespace Libro.PL.ViewModels.Book
         public int Id { get; set; }
 
         [MaxLength(500, ErrorMessage = Errors.MaxLength), Required]
+        [Remote("AllowItem", null!, AdditionalFields = "Id,AuthorId", ErrorMessage = Errors.Duplicated)]
         public string Title { get; set; } = null!;
 
         [Display(Name = "Author"), Required]
+        [Remote("AllowItem", null!, AdditionalFields = "Id,Title", ErrorMessage = Errors.Duplicated)]
         public int AuthorId { get; set; }
 
         public IEnumerable<SelectListItem>? Authors { get; set; }
@@ -18,6 +21,7 @@ namespace Libro.PL.ViewModels.Book
         public string Publisher { get; set; } = null!;
 
         [Display(Name = "Publishing Date"), Required]
+        [AssertThat("PublishingDate <= Today()", ErrorMessage = Errors.NotAllowFutureDates)]
         public DateTime PublishingDate { get; set; } = DateTime.Now;
 
         public IFormFile? Image { get; set; }

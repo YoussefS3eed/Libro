@@ -3,6 +3,10 @@
     public class BookCategory
     {
         private BookCategory() { }
+        public BookCategory(int? categoryId)
+        {
+            CategoryId = categoryId;
+        }
         public BookCategory(int bookId, int categoryId)
         {
             BookId = bookId;

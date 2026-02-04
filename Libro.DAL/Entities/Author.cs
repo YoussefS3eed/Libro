@@ -4,7 +4,7 @@
     {
         protected Author()
         {
-            CreatedBy = "Admin Author";
+            CreatedBy = "Admin from protected Author ctor";
         }
         public Author(string name, string createdBy)
         {

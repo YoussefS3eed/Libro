@@ -1,6 +1,7 @@
 using Libro.BLL.Common;
 using Libro.DAL.Common;
 using Libro.PL.Mapper;
+using UoN.ExpressiveAnnotations.NetCore.DependencyInjection;
 namespace Libro.PL
 {
     public class Program
@@ -30,9 +31,10 @@ namespace Libro.PL
             builder.Services.AddDataAccessLayerInPL();
             builder.Services.AddBusinessLogicLayerInPL();
             builder.Services.AddAutoMapper(x => x.AddProfile<DomainProfile>());
+
             // ------------------- Add MVC -------------------
             builder.Services.AddControllersWithViews();
-
+            builder.Services.AddExpressiveAnnotations();
 
             var app = builder.Build();
 
