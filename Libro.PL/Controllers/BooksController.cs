@@ -1,8 +1,12 @@
 ﻿using AutoMapper;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
+using CloudinaryDotNet.Core;
 using Libro.BLL.DTOs.Book;
-using Libro.PL.ViewModels.Author;
+using Libro.PL.Settings;
 using Libro.PL.ViewModels.Book;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Options;
 
 namespace Libro.PL.Controllers
 {
@@ -11,16 +15,19 @@ namespace Libro.PL.Controllers
         private readonly IBookService _bookService;
         private readonly IMapper _mapper;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly Cloudinary _cloudinary;
 
         private readonly List<string> _allowedExtensions = new() { ".jpg", ".jpeg", ".png" };
         private const int _maxAllowedSize = 2097152; // 2MB
 
         public BooksController(IBookService bookService, IMapper mapper,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment, IOptions<CloudinarySettings> cloudinary)
         {
             _bookService = bookService;
             _mapper = mapper;
             _webHostEnvironment = webHostEnvironment;
+
+            _cloudinary = new Cloudinary(new Account(cloudinary.Value.Cloud, cloudinary.Value.ApiKey, cloudinary.Value.ApiSecret));
         }
 
         public async Task<IActionResult> Index()
@@ -40,6 +47,10 @@ namespace Libro.PL.Controllers
             if (!ModelState.IsValid)
                 return View("Form", await PopulateViewModel(model));
 
+            #region using Cloudinary
+            var CreateBookDTO = _mapper.Map<CreateBookDTO>(model);
+            #endregion
+
             // Handle image upload
             if (model.Image != null)
             {
@@ -49,10 +60,24 @@ namespace Libro.PL.Controllers
                     ModelState.AddModelError(nameof(model.Image), uploadImageResult.Error!);
                     return View("Form", await PopulateViewModel(model));
                 }
-                model.ImageUrl = uploadImageResult.ImageUrl;
+                #region using SaveInDisk
+                //model.ImageUrl = uploadImageResult.ImageUrl;
+                #endregion
+
+                #region using Cloudinary
+                var result1 = await SaveImageToCloudinary(model.Image, uploadImageResult.ImageUrl!);
+                if (result1 != null)
+                {
+                    CreateBookDTO.ImageUrl = result1.SecureUrl.ToString();
+                    CreateBookDTO.ImageThumbnailUrl = GetThumbnailUrl(CreateBookDTO.ImageUrl);
+                    CreateBookDTO.ImagePublicId = result1.PublicId;
+                }
+                #endregion
             }
 
-            var CreateBookDTO = _mapper.Map<CreateBookDTO>(model);
+            #region using SaveInDisk
+            //var CreateBookDTO = _mapper.Map<CreateBookDTO>(model);
+            #endregion
 
             // Call service
             var result = await _bookService.CreateAsync(CreateBookDTO);
@@ -62,8 +87,11 @@ namespace Libro.PL.Controllers
                 TempData["Error"] = result.ErrorMessage;
                 return View("Form", await PopulateViewModel(model));
             }
-            if (model.Image != null)
-                await SaveImageToDisk(model.Image, result.Result?.ImageUrl!);
+            #region using SaveInDisk
+            //if (model.Image != null)
+            //    await SaveImageToDisk(model.Image, result.Result?.ImageUrl!);
+            #endregion
+
             TempData["Success"] = "Book created successfully";
             return RedirectToAction(nameof(Index));
         }
@@ -90,29 +118,47 @@ namespace Libro.PL.Controllers
 
 
             var book = await _bookService.GetByIdAsync(model.Id);
-
+            var updateBookDto = _mapper.Map<UpdateBookDTO>(model);
             if (model.Image != null)
             {
                 var uploadResult = await HandleImageUpload(model.Image);
                 if (!uploadResult.Success)
                 {
-                    ModelState.AddModelError(nameof(model.Image), uploadResult.Error);
+                    ModelState.AddModelError(nameof(model.Image), uploadResult.Error!);
                     var viewModel = await PopulateViewModel(model);
                     return View("Form", viewModel);
                 }
                 // Delete old image if exists
                 if (!string.IsNullOrEmpty(book.Result!.ImageUrl))
                 {
-                    DeleteOldImage(book.Result!.ImageUrl);
+                    #region using SaveInDisk
+                    //DeleteOldImageFromDisk(book.Result!.ImageUrl);
+                    #endregion
+
+                    #region using Cloudinary
+                    await DeleteOldImageFromCloudinary(book.Result.ImagePublicId);
+                    var result1 = await SaveImageToCloudinary(model.Image, uploadResult.ImageUrl!);
+                    if (result1 != null)
+                    {
+                        updateBookDto.ImageUrl = result1.SecureUrl.ToString();
+                        updateBookDto.ImageThumbnailUrl = GetThumbnailUrl(updateBookDto.ImageUrl);
+                        updateBookDto.ImagePublicId = result1.PublicId;
+                    }
+                    #endregion
                 }
 
-                model.ImageUrl = uploadResult.ImageUrl;
             }
             else if (model.Image is null && !string.IsNullOrEmpty(book.Result!.ImageUrl))
-                model.ImageUrl = book.Result!.ImageUrl;
+            {
+                updateBookDto.ImageUrl = book.Result!.ImageUrl;
+                updateBookDto.ImageThumbnailUrl = book.Result!.ImageThumbnailUrl;
+                updateBookDto.ImagePublicId = book.Result!.ImagePublicId;
 
+            }
 
-            var updateBookDto = _mapper.Map<UpdateBookDTO>(model);
+            #region using SaveInDisk
+            //var updateBookDto = _mapper.Map<UpdateBookDTO>(model);
+            #endregion
 
             // Call service
             var result = await _bookService.UpdateAsync(updateBookDto);
@@ -124,11 +170,11 @@ namespace Libro.PL.Controllers
                 return View("Form", viewModel);
             }
 
-            // Save new image if uploaded
-            if (model.Image != null && !string.IsNullOrEmpty(model.ImageUrl))
-            {
-                await SaveImageToDisk(model.Image, model.ImageUrl);
-            }
+            //// Save new image if uploaded
+            //if (model.Image != null && !string.IsNullOrEmpty(model.ImageUrl))
+            //{
+            //    await SaveImageToDisk(model.Image, model.ImageUrl);
+            //}
 
             TempData["Success"] = "Book updated successfully";
             return RedirectToAction(nameof(Index));
@@ -178,7 +224,19 @@ namespace Libro.PL.Controllers
             using var stream = new FileStream(path, FileMode.Create);
             await image.CopyToAsync(stream);
         }
-        private void DeleteOldImage(string imageUrl)
+
+        private async Task<ImageUploadResult?> SaveImageToCloudinary(IFormFile image, string imageName)
+        {
+            using var straem = image.OpenReadStream();
+
+            var imageParams = new ImageUploadParams
+            {
+                File = new FileDescription(imageName, straem),
+                UseFilename = true
+            };
+            return await _cloudinary.UploadAsync(imageParams);
+        }
+        private void DeleteOldImageFromDisk(string imageUrl)
         {
             var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, "images/books", imageUrl);
 
@@ -186,6 +244,20 @@ namespace Libro.PL.Controllers
             {
                 System.IO.File.Delete(oldImagePath);
             }
+        }
+
+        private async Task DeleteOldImageFromCloudinary(string? imagePublicId)
+        {
+            await _cloudinary.DeleteResourcesAsync(imagePublicId);
+        }
+        private string GetThumbnailUrl(string url)
+        {
+            var separator = "image/upload/";
+            var urlParts = url.Split(separator);
+
+            var thumbnailUrl = $"{urlParts[0]}{separator}c_thumb,w_200,g_face/{urlParts[1]}";
+
+            return thumbnailUrl;
         }
     }
 }

@@ -43,6 +43,8 @@
         public string Publisher { get; private set; } = null!;
         public DateTime PublishingDate { get; private set; }
         public string? ImageUrl { get; private set; }
+        public string? ImageThumbnailUrl { get; set; }
+        public string? ImagePublicId { get; set; }
         public string Hall { get; private set; } = null!;
         public bool IsAvailableForRental { get; private set; }
         public string Description { get; private set; } = null!;
@@ -52,7 +54,7 @@
 
         public bool Update(string title, int authorId, string publisher, DateTime publishingDate,
                     string hall, bool isAvailableForRental, string description,
-                    string? imageUrl, string updatedBy, IEnumerable<int?> categoryIds)
+                    string? imageUrl, string? imageThumbnailUrl, string? imagePublicId, string updatedBy, IEnumerable<int?> categoryIds)
         {
             var changed = false;
             if (Title != title ||
@@ -72,6 +74,8 @@
                 IsAvailableForRental = isAvailableForRental;
                 Description = description;
                 ImageUrl = imageUrl;
+                ImageThumbnailUrl = imageThumbnailUrl;
+                ImagePublicId = imagePublicId;
                 changed = true;
             }
 

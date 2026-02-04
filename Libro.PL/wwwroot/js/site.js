@@ -37,9 +37,13 @@ function showErrorMessage(xhr) {
 //    });
 //}
 
+function disableSubmitButton() {
+    $('body :submit').attr('disabled', 'disabled').attr('data-kt-indicator', 'on');
+}
+
 // ======== Handle Modal ========
 function onModalBegin() {
-    $('body :submit').attr('disabled', 'disabled').attr('data-kt-indicator', 'on');
+    disableSubmitButton();
 }
 function onModalSuccess(row) {
     showSuccessMessage();
@@ -157,18 +161,54 @@ var KTDatatables = function () {
 
 // ======== Document Ready ========
 $(document).ready(function () {
-    //TinyMCE
-    var options = { selector: ".js-tinymce", height: "422" };
+    // Disable submit button on form submit to prevent multiple submissions
+    $('form').on('submit', function () {
+        // Use It If you find error when you submit form for first time with TinyMCE
+        //if ($('.js-tinymce').length >= 0) {
+        //    $('.js-tinymce').each(function () {
+        //        var content = tinyMCE.get($(this).attr('id')).getContent()
+        //        $(this).val(content);
+        //    });
+        //}
+        //if ($(this).valid())
+        disableSubmitButton();
+    }).validate();
 
-    if (KTThemeMode.getMode() === "dark") {
-        options["skin"] = "oxide-dark";
-        options["content_css"] = "dark";
+    ////TinyMCE
+    function initTinyMCE() {
+        if ($('.js-tinymce').length === 0)
+            return;
+
+        tinymce.remove('.js-tinymce');
+
+        let options = {
+            selector: '.js-tinymce',
+            height: 430
+        };
+
+        if (KTThemeMode.getMode() === 'dark') {
+            options.skin = 'oxide-dark';
+            options.content_css = 'dark';
+        }
+
+        tinymce.init(options);
     }
 
-    tinymce.init(options);
+    initTinyMCE();
+
+    KTThemeMode.on('kt.thememode.change', function (mode) {
+        initTinyMCE();
+    });
 
     //Select2
     $('.js-select2').select2();
+    $('.js-select2').on('select2:select', function (e) {
+        $('form').validate().element('#' + $(this).attr('id'));
+    });
+
+    //$('#Title').on('keyup change', function () {
+    //    $('form').validate().element('#AuthorId');
+    //});
 
     //Datepicker
     $('.js-datepicker').daterangepicker({

@@ -1,6 +1,7 @@
 using Libro.BLL.Common;
 using Libro.DAL.Common;
 using Libro.PL.Mapper;
+using Libro.PL.Settings;
 using UoN.ExpressiveAnnotations.NetCore.DependencyInjection;
 namespace Libro.PL
 {
@@ -34,6 +35,7 @@ namespace Libro.PL
 
             // ------------------- Add MVC -------------------
             builder.Services.AddControllersWithViews();
+            builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection(nameof(CloudinarySettings)));
             builder.Services.AddExpressiveAnnotations();
 
             var app = builder.Build();
