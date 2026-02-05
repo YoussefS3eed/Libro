@@ -15,6 +15,8 @@
         public bool IsAvailableForRental { get; set; }
         public string Description { get; set; } = null!;
         public List<int?> CategoryIds { get; set; } = new();
+        public List<string?> CategoryNames { get; set; } = new();
+        public DateTime CreatedOn { get; set; }
     }
 }
 

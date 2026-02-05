@@ -7,6 +7,7 @@ namespace Libro.BLL.Service.Abstraction
         Task<Response<BookDTO>> GetByIdAsync(int bookId);
         Task<Response<IEnumerable<BookDTO>>> GetAllAsync();
         Task<Response<BookDTO>> GetByIdWithAuthorAndCategoriesAsync(int id);
+        Task<Response<BookDTO>> GetByIdWithAuthorAndCategoriesAndCategoryAsync(int id);
         Task<Response<BookDTO>> CreateAsync(CreateBookDTO dto);
         Task<Response<BookDTO>> UpdateAsync(UpdateBookDTO dto);
         Task<Response<bool>> ToggleStatusAsync(int id, string deletedBy);

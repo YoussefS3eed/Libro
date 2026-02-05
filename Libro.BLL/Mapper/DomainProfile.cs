@@ -8,7 +8,7 @@ namespace Libro.BlL.Mapper
     public class DomainProfile : Profile
     {
         public DomainProfile()
-        
+
         {
             // Category Mappings
             CreateMap<CreateCategoryDTO, Category>();
@@ -44,7 +44,9 @@ namespace Libro.BlL.Mapper
             CreateMap<Book, BookDTO>()
                 .ForMember(dest => dest.AuthorName, opt => opt.MapFrom(src => src.Author!.Name))
                 .ForMember(dest => dest.CategoryIds, opt => opt.MapFrom(src =>
-                    src.Categories.Select(c => c.CategoryId).ToList()));
+                    src.Categories.Select(c => c.CategoryId).ToList()))
+                .ForMember(dest => dest.CategoryNames, opt => opt.MapFrom(src =>
+                    src.Categories.Select(c => c.Category!.Name).ToList()));
 
 
         }

@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
 using CloudinaryDotNet;
-using CloudinaryDotNet.Actions;
-using CloudinaryDotNet.Core;
 using Libro.BLL.DTOs.Book;
+using Libro.DAL.Entities;
 using Libro.PL.Settings;
 using Libro.PL.ViewModels.Book;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
@@ -17,7 +17,7 @@ namespace Libro.PL.Controllers
         private readonly IBookService _bookService;
         private readonly IMapper _mapper;
         private readonly IWebHostEnvironment _webHostEnvironment;
-        private readonly Cloudinary _cloudinary;
+        //private readonly Cloudinary _cloudinary;
 
         private readonly List<string> _allowedExtensions = new() { ".jpg", ".jpeg", ".png" };
         private const int _maxAllowedSize = 2097152; // 2MB
@@ -29,14 +29,24 @@ namespace Libro.PL.Controllers
             _mapper = mapper;
             _webHostEnvironment = webHostEnvironment;
 
-            _cloudinary = new Cloudinary(new Account(cloudinary.Value.Cloud, cloudinary.Value.ApiKey, cloudinary.Value.ApiSecret));
+            //_cloudinary = new Cloudinary(new Account(cloudinary.Value.Cloud, cloudinary.Value.ApiKey, cloudinary.Value.ApiSecret));
         }
 
         public async Task<IActionResult> Index()
         {
             return View();
         }
+        public async Task<IActionResult> Details(int id)
+        {
 
+            var book = await _bookService.GetByIdWithAuthorAndCategoriesAndCategoryAsync(id);
+            if (book is null || book.Result is null)
+                return NotFound();
+
+            var viewModel = _mapper.Map<BookViewModel>(book.Result);
+
+            return View(viewModel);
+        }
         public async Task<IActionResult> Create()
         {
             return View("Form", await PopulateViewModel());
@@ -84,7 +94,7 @@ namespace Libro.PL.Controllers
             }
 
             TempData["Success"] = "Book created successfully";
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Details), new { id = result.Result!.Id });
         }
 
         public async Task<IActionResult> Edit(int id)
@@ -156,7 +166,7 @@ namespace Libro.PL.Controllers
             {
                 await SaveImageToDisk(model.Image, result.Result!.ImageUrl!);
                 await SaveThumbImageToDisk(model.Image, result.Result!.ImageThumbnailUrl!);
-                if(!string.IsNullOrEmpty(oldImgUrl))
+                if (!string.IsNullOrEmpty(oldImgUrl))
                 {
                     DeleteOldImageFromDisk(oldImgUrl);
                     DeleteOldImageFromDisk(oldThumbUrl);
@@ -164,7 +174,7 @@ namespace Libro.PL.Controllers
             }
 
             TempData["Success"] = "Book updated successfully";
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Details), new { id = result.Result!.Id });
         }
 
         public async Task<IActionResult> AllowItem(BookFormViewModel model)

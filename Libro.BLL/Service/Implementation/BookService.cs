@@ -56,6 +56,24 @@ namespace Libro.BLL.Service.Implementation
                 return new(null, $"Error retrieving book: {ex.Message}", true, HttpStatusCode.InternalServerError);
             }
         }
+
+        public async Task<Response<BookDTO>> GetByIdWithAuthorAndCategoriesAndCategoryAsync(int id)
+        {
+            try
+            {
+                var book = await _bookRepo.GetByIdWithAuthorAndCategoriesAndCategoryAsync(id);
+                if (book == null)
+                    return new(null, "Book not found", true, HttpStatusCode.NotFound);
+                var maped = _mapper.Map<BookDTO>(book);
+                return new(maped, null, false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving book by ID {Id}", id);
+                return new(null, $"Error retrieving book: {ex.Message}", true, HttpStatusCode.InternalServerError);
+            }
+        }
+
         public async Task<Response<IEnumerable<BookDTO>>> GetAllAsync()
         {
             var books = await _bookRepo.GetAllAsync(b => !b.IsDeleted);

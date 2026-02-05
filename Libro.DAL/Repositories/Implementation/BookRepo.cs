@@ -47,7 +47,7 @@
 
             // 2️⃣ تعديل باستخدام Entity logic
             book.Update(book1.Title, book1.AuthorId, book1.Publisher, book1.PublishingDate, book1.Hall,
-                        book1.IsAvailableForRental, book1.Description, book1.ImageUrl, book1.ImageThumbnailUrl,book1.ImagePublicId, book1.UpdatedBy!, categoryIds);
+                        book1.IsAvailableForRental, book1.Description, book1.ImageUrl, book1.ImageThumbnailUrl, book1.ImagePublicId, book1.UpdatedBy!, categoryIds);
 
             // 3️⃣ حفظ التغييرات
             var success = await _context.SaveChangesAsync();
@@ -67,6 +67,15 @@
             return await _context.Books
                 .Include(b => b.Author)
                 .Include(b => b.Categories)
+                .SingleOrDefaultAsync(b => b.Id == id);
+        }
+
+        public async Task<Book?> GetByIdWithAuthorAndCategoriesAndCategoryAsync(int id)
+        {
+            return await _context.Books
+                .Include(b => b.Author)
+                .Include(b => b.Categories)
+                .ThenInclude(c => c.Category)
                 .SingleOrDefaultAsync(b => b.Id == id);
         }
 
